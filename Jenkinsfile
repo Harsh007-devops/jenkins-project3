@@ -15,7 +15,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: "${params.BRANCH}", url: 'YOUR_GIT_REPO_URL'
+                git branch: "${params.BRANCH}", url: 'https://github.com/Harsh007-devops/jenkins-project3.git'
             }
         }
 
