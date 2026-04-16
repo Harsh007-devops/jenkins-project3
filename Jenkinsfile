@@ -46,7 +46,7 @@ pipeline {
                     echo "Running tests..."
                     
                     if [ "$DEBUG" = "true" ]; then
-                      echo "Forcing failure"
+                      echo "Simulated Failure Triggered!"
                       exit 1
                     fi
                     
@@ -73,16 +73,29 @@ pipeline {
         }
     }
 
+  
     post {
-        failure {
-            echo "Build Failed!"
-            sh "mkdir -p failed_logs && cp -r * failed_logs/"
-            archiveArtifacts artifacts: 'failed_logs/**'
-        }
 
-        always {
-            echo "Cleaning workspace"
-            cleanWs()
-        }
+    success {
+        echo "Build Successful ✅"
     }
+
+    failure {
+        echo "Build Failed ❌ Sending Alert..."
+
+        sh '''
+        mkdir -p failed_logs
+        echo "Failure occurred at $(date)" > failed_logs/error.log
+        ls -lrt >> failed_logs/error.log
+        '''
+
+        archiveArtifacts artifacts: 'failed_logs/**'
+    }
+
+    always {
+        echo "Cleaning workspace..."
+
+        cleanWs()
+    }
+}
 }
