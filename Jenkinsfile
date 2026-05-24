@@ -1,4 +1,4 @@
-@Library('jenkins-shared-library') _
+@Library('my-shared-lib') _
 
 pipeline {
     agent any
@@ -36,7 +36,9 @@ pipeline {
 
         stage('Build') {
             steps {
-                build()
+                script {
+                    build()
+                }
             }
         }
 
@@ -45,12 +47,12 @@ pipeline {
                 retry(2) {
                     sh '''
                     echo "Running tests..."
-                    
+
                     if [ "$DEBUG" = "true" ]; then
                       echo "Simulated Failure Triggered!"
                       exit 1
                     fi
-                    
+
                     echo "Tests passed"
                     '''
                 }
@@ -74,29 +76,31 @@ pipeline {
         }
     }
 
-  
     post {
 
-    success {
-        notify("Build Successful ✅")
+        success {
+            script {
+                notify("Build Successful ✅")
+            }
+        }
+
+        failure {
+            script {
+                notify("Pipeline Failed ❌")
+            }
+
+            sh '''
+            mkdir -p failed_logs
+            echo "Failure occurred at $(date)" > failed_logs/error.log
+            ls -lrt >> failed_logs/error.log
+            '''
+
+            archiveArtifacts artifacts: 'failed_logs/**'
+        }
+
+        always {
+            echo "Cleaning workspace..."
+            cleanWs()
+        }
     }
-
-    failure {
-        echo "Build Failed ❌ Sending Alert..."
-
-        sh '''
-        mkdir -p failed_logs
-        echo "Failure occurred at $(date)" > failed_logs/error.log
-        ls -lrt >> failed_logs/error.log
-        '''
-    notify("Pipeline failed! Please check logs.")
-        archiveArtifacts artifacts: 'failed_logs/**'
-    }
-
-    always {
-        echo "Cleaning workspace..."
-
-        cleanWs()
-    }
-}
 }
