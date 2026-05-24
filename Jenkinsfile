@@ -1,3 +1,4 @@
+@Library('my-shared-lib') _
 
 pipeline {
     agent any
@@ -35,7 +36,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'echo "Building application..."'
+                build()
             }
         }
 
@@ -77,7 +78,7 @@ pipeline {
     post {
 
     success {
-        echo "Build Successful ✅"
+        notify("Build Successful ✅")
     }
 
     failure {
@@ -88,7 +89,7 @@ pipeline {
         echo "Failure occurred at $(date)" > failed_logs/error.log
         ls -lrt >> failed_logs/error.log
         '''
-    echo "ALERT: Pipeline failed! Please check logs."
+    notify("Pipeline failed! Please check logs.")
         archiveArtifacts artifacts: 'failed_logs/**'
     }
 
